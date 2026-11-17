@@ -357,6 +357,11 @@ try {
     await g.evaluate(() => localStorage.setItem("sbt-v1", JSON.stringify({ v: 1, tut: true, ebest: { toString: null }, dex: { k_hoo: { toString: null } } })));
     await g.reload(); await g.waitForTimeout(200);
     check("記録の数の所に変な値（{toString:null}）が入っても、ホームが開く（CodeRabbit kagaku-henka#1）", errors.length === before && await g.locator("#go-d").count() === 1, errors.slice(before).join(","));
+    const before3 = errors.length;
+    await g.evaluate((k) => localStorage.setItem(k, JSON.stringify({ v: 1, tut: true, t: { toString: null } })), "sbt-v1");
+    await g.reload(); await g.waitForTimeout(200);
+    const saved3 = await g.evaluate(() => { try { __nm.save(() => {}); return true; } catch (e) { return String(e); } });
+    check("記録の t に変な値（{toString:null}）が入っても、ホームが開き、保存で止まらない（CodeRabbit saibo-tsukuri#1）", errors.length === before3 && saved3 === true && await g.locator("#go-d").count() === 1, String(saved3) + errors.slice(before3).join(","));
     const before2 = errors.length;
     await g.evaluate((k) => localStorage.setItem(k, JSON.stringify({ v: 1, tut: true, runs: { p: { mode: "p", date: "2026-11-17", list: [], res: [], cur: { wrong: [], w2: [{ toString: null }, "x"], hints: 0, step: 2 }, id: "w" } } })), "sbt-v1");
     await g.reload(); await g.waitForTimeout(200);
