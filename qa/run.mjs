@@ -91,6 +91,8 @@ const TB = {
 
 // ---- 2. ファイルの中身 ----
 const html = readFileSync(path.join(root, "index.html"), "utf8"), gen = readFileSync(path.join(root, "data.js"), "utf8"), readme = readFileSync(path.join(root, "README.md"), "utf8");
+// ひな形の写し（<!-- 名前:begin〜end -->）はゲームの言葉ではないので外し、Core.kofi・Core.KOFI は写す前の形にもどして見る（shared-workflows の sync-template が足した）
+const gameOwn = (t) => t.replace(/<!-- ([a-z0-9-]+):begin[\s\S]*?<!-- \1:end -->/g, "").split("${Core.KOFI}").join("https://ko-fi.com/satouaaaaa").replace(/Core\.kofi\(("(?:[^"\\]|\\.)*"), ("(?:[^"\\]|\\.)*")\)/g, (m, a, b) => "`<p class=\"note kofi\">" + JSON.parse(a) + "、<a href=\"https://ko-fi.com/satouaaaaa\" target=\"_blank\" rel=\"noopener\">Ko-fi でコーヒー1杯の応援</a>をもらえると、" + JSON.parse(b) + "の励みになります（任意・遊ぶのはずっと無料）。</p>`");
 const ext = [...html.matchAll(/(?:src|href)="(https?:[^"]+)"/g)].map((m) => m[1]).filter((u) => !/^https:\/\/fonts\.googleapis\.com(\/|$)|^https:\/\/ko-fi\.com\/satouaaaaa$/.test(u));
 check("外から読むのは文字（Google Fonts）だけ。スクリプト・広告・解析を入れない（出典のリンクは押したときに開くだけ）", ext.length === 0 && ![...html.matchAll(/<script[^>]+src="([^"]+)"/g)].some((m) => /^https?:/.test(m[1])), ext.join(","));
 check("CSP で通信先を自分だけにしている", /connect-src 'self'/.test(html) && !/connect-src[^;"]*https/.test(html));
@@ -98,15 +100,15 @@ check("Math.random は練習・とことんの種だけ（今日の5問・上級
 check("乱数は sort の比較の中で引かない（ブラウザで引く回数が変わる）", !/\.sort\(\s*\([^)]*\)\s*=>[^\n;]*\b(R|rng|rand|Math\.random)\s*\(/.test(html + gen));
 { const inl = html.split("<script>").slice(1).map((x) => x.split("</" + "script>")[0]).join("\n"); // index.html の中の script も見る（nemuri-kotsu#1 で行の途中に // を入れて画面が動かなくなった）
   check("一行の式の途中にコメント // を足さない（行の残りが消える。rosen-hitofude 2026-11-04・nemuri-kotsu#1）", !/;\s*\/\/[^\n]*;\s*\w/.test((gen + "\n" + inl).split("\n").filter((l) => !l.trim().startsWith("//")).join("\n"))); }
-check("言い方：「必ず」「絶対」と言い切らない", !/必ず|絶対/.test(html.replace(/\/\/[^\n]*/g, "") + gen.replace(/\/\/[^\n]*/g, "") + readme));
+check("言い方：「必ず」「絶対」と言い切らない", !/必ず|絶対/.test(gameOwn(html).replace(/\/\/[^\n]*/g, "") + gen.replace(/\/\/[^\n]*/g, "") + readme));
 { const howto = (html.match(/<dialog id="howto"[\s\S]*?<\/dialog>/) || [""])[0], ab = (html.match(/function about\(\)[\s\S]*?\n}/) || [""])[0], dis = (t) => /教科書/.test(t) && /代わりではありません|確かめて/.test(t);
   check("言い方：遊び方・「このゲームについて」・README のどれにも、教科書で確かめることがある", dis(howto) && dis(ab) && dis(readme), `遊び方 ${dis(howto)}・について ${dis(ab)}`); }
-check("写し元（状態変化あて・光の進み方あて・無脊椎動物なかま分け・力の種類あて・季節の天気あて・気体あて・液性よみ・植物なかま分け・動物なかま分け・なに税？）の言葉が残っていない（game-dev.md A 手順5）", !/憲法|国会|内閣|裁判所|天皇|国事行為|しくみ帳|kenpo|kps|KPS|税|納め|財務省|e-Gov|zeikin|zni|ZNI|国税庁|哺乳|呼吸|dnk|DNK|ズーネット|海遊館|胚珠|維管束|子葉|shokubutsu|snk|SNK|液性|洗剤|pH|eky|EKY|ekisei|消費者庁|石灰水|kta|KTA|天気|季節|気団|kst|KST|kisetsu|重力|弾性|摩擦|磁力|cks|CKS|chikara|昆虫|甲殻|クモ|多足|軟体|無脊椎|msk|MSK|musekitsui|反射|屈折|直進|hks|HKS|hikari|融解|凝固|蒸発|凝縮|昇華|jth|JTH|jotai|状態変化/.test(html + gen + readme));
+check("写し元（状態変化あて・光の進み方あて・無脊椎動物なかま分け・力の種類あて・季節の天気あて・気体あて・液性よみ・植物なかま分け・動物なかま分け・なに税？）の言葉が残っていない（game-dev.md A 手順5）", !/憲法|国会|内閣|裁判所|天皇|国事行為|しくみ帳|kenpo|kps|KPS|税|納め|財務省|e-Gov|zeikin|zni|ZNI|国税庁|哺乳|呼吸|dnk|DNK|ズーネット|海遊館|胚珠|維管束|子葉|shokubutsu|snk|SNK|液性|洗剤|pH|eky|EKY|ekisei|消費者庁|石灰水|kta|KTA|天気|季節|気団|kst|KST|kisetsu|重力|弾性|摩擦|磁力|cks|CKS|chikara|昆虫|甲殻|クモ|多足|軟体|無脊椎|msk|MSK|musekitsui|反射|屈折|直進|hks|HKS|hikari|融解|凝固|蒸発|凝縮|昇華|jth|JTH|jotai|状態変化/.test(gameOwn(html) + gen + readme));
 { const a11 = JSON.parse(readFileSync(path.join(root, "qa/a11y.json"), "utf8"));
   check("見やすさの検査の画面の名前（qa/a11y.json）が、このゲームの画面にある名前（写し元の名前が残らない。CodeRabbit ekisei-yomi#1 の「雲帳」）", (a11.screens || []).every((x) => html.includes(x.name)), (a11.screens || []).map((x) => x.name).join(",")); }
 check("画面にお笑いの言葉を入れない（本物っぽく）", !/お笑い|ギャグ|ツッコミ|なんでやねん|（うそ）/.test(html + gen));
 check("引き継ぎ：transfer.js をゲームの script より前に、このゲームの記録のキー（記録・文字・復習）だけで読む・depth.js も前に読む", /<script src="transfer\.js" data-game="saibo-tsukuri" data-keys="sbt-v1,sbt-fs,sbt-depth"><\/script>\s*<script src="depth\.js" data-game="saibo-tsukuri" data-key="sbt-depth"><\/script>\s*<\/head>/.test(html) && html.indexOf('src="transfer.js"') < html.indexOf('src="data.js"') && /data-hk/.test(html) && existsSync(path.join(root, "transfer.js")));
-check("好きなだけ遊べる：チケット・回数の上限・🔒で開くモードを入れない（game-dev.md F1・F2）", !/🎫|チケット|すると開く|🔒/.test(html) && !/\blife\b|ELIFE/.test(html));
+check("好きなだけ遊べる：チケット・回数の上限・🔒で開くモードを入れない（game-dev.md F1・F2）", !/🎫|チケット|すると開く|🔒/.test(gameOwn(html)) && !/\blife\b|ELIFE/.test(gameOwn(html)));
 { const og = (k) => (html.match(new RegExp(`<meta (?:property|name)="${k}" content="([^"]+)"`)) || [])[1] || "";
   const png = readFileSync(path.join(root, "og.png"));
   check("SNS で貼ると絵と題が出る（OGP・1200×630・絶対URL）", og("og:title") && og("og:description") && og("og:image") === "https://satou-aaaaa.github.io/saibo-tsukuri/og.png" && og("twitter:card") === "summary_large_image" && png.readUInt32BE(16) === 1200 && png.readUInt32BE(20) === 630); }
